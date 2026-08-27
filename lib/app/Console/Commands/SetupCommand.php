@@ -25,9 +25,9 @@ class SetupCommand extends Command
                 $env
             );
         }
-        $this->call('migrate');
+        $this->call('migrate', ['--force' => true]);
         $this->call('storage:link');
-        $this->call('db:seed');
+        $this->call('db:seed', ['--force' => true]);
         $process1 = new Process([
             'npm',
             'install',
