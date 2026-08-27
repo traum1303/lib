@@ -12,7 +12,10 @@ use App\Exceptions\BookIssueException;
 use App\Models\Book;
 use App\Models\BookIssue;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use function PHPUnit\Framework\isInstanceOf;
 
 class BookIssueService
 {
@@ -73,13 +76,27 @@ class BookIssueService
 
             $book->decrement('total');
 
-            return BookIssue::query()->create([
-                'book_id' => $book->id,
-                'user_id' => $dto->readerId,
-                'return_to' => $dto->returnTo,
-                'created_at' => $dto->issuedAt,
-                'status' => $dto->status,
-            ]);
+            try {
+                return BookIssue::query()->create([
+                    'book_id' => $book->id,
+                    'user_id' => $dto->readerId,
+                    'return_to' => $dto->returnTo,
+                    'created_at' => $dto->issuedAt,
+                    'status' => $dto->status,
+                ]);
+            } catch (QueryException|UniqueConstraintViolationException $e) {
+
+                $msg = "Не удалось оформить выдачу книги «{$book->name}».";
+
+                if ($e instanceOf UniqueConstraintViolationException) {
+                    $msg .= ' Такая выдача уже существует для выбранного пользователя.';
+                }
+
+                throw new BookIssueException(
+                    $msg,
+                    previous: $e
+                );
+            }
         });
     }
 

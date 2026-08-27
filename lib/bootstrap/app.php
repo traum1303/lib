@@ -26,9 +26,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ) {
             return redirect()
                 ->back()
-                ->withErrors([
-                    'selected_id_book' => $e->getMessage(),
-                ])
+                ->withErrors(['book_issue' => $e->getMessage()])
                 ->withInput();
         });
         $exceptions->render(function (
